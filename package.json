@@ -1,0 +1,29 @@
+{
+  "name": "dao-audit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jessica-y-y/dao-audit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/jessica-y-y/dao-audit/issues"
+  },
+  "homepage": "https://github.com/jessica-y-y/dao-audit#readme",
+  "devDependencies": {
+    "@types/node": "^22.19.17",
+    "hardhat": "^3.4.1",
+    "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1"
+  }
+}
