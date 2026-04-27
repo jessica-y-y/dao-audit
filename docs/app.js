@@ -46,13 +46,21 @@ let tokenContract, stakingContract, nftContract, daoContract;
 const status = document.getElementById("status");
 const log = (msg) => { status.innerText = msg; console.log(msg); };
 
+// ── Helper: garante checksum em qualquer endereço ───────────────
+// Impede ENS lookup na Sepolia (não suportado no ethers v6.7.1)
+const toChecksumAddress = (addr) => ethers.getAddress(addr);
+
 // ── Conectar carteira ───────────────────────────────────────────
 window.connectWallet = async () => {
   if (!window.ethereum) return log("❌ MetaMask não encontrada. Instale a extensão.");
   try {
     provider = new ethers.BrowserProvider(window.ethereum);
     signer   = await provider.getSigner();
-    userAddress = await signer.getAddress();
+
+    // getAddress() retorna em checksum — força explicitamente para garantir
+    const rawAddress = await signer.getAddress();
+    userAddress = toChecksumAddress(rawAddress);
+
     document.getElementById("wallet-info").innerText = `Carteira: ${userAddress}`;
 
     tokenContract   = new ethers.Contract(TOKEN_ADDRESS,   TOKEN_ABI,   signer);
@@ -60,7 +68,7 @@ window.connectWallet = async () => {
     nftContract     = new ethers.Contract(NFT_ADDRESS,     NFT_ABI,     signer);
     daoContract     = new ethers.Contract(DAO_ADDRESS,     DAO_ABI,     signer);
 
-    // Mostra status do NFT da carteira conectada
+    // Consulta status do NFT da carteira conectada
     const temNFT = await nftContract.hasNFT(userAddress);
     const total  = await nftContract.totalMembers();
     document.getElementById("nft-status").innerText =
@@ -71,19 +79,17 @@ window.connectWallet = async () => {
 };
 
 // ── NFT — mint(address to) — onlyOwner ──────────────────────────
-// O owner chama mint passando o endereço do destinatário
 window.mintNFT = async () => {
   try {
-       
     const raw = document.getElementById("mintAddress").value.trim();
     if (!ethers.isAddress(raw)) return log("❌ Endereço inválido. Use um endereço Ethereum válido (0x...).");
-    const recipient = ethers.getAddress(raw); // converte para checksum, evita ENS lookup
+    const recipient = toChecksumAddress(raw); // evita ENS lookup
+    log(`Mintando NFT para ${recipient}...`);
     const tx = await nftContract.mint(recipient);
     await tx.wait();
 
     const total = await nftContract.totalMembers();
-    document.getElementById("nft-status").innerText =
-      `Total de membros atualizado: ${total}`;
+    document.getElementById("nft-status").innerText = `Total de membros atualizado: ${total}`;
     log("✅ NFT mintado! Tx: " + tx.hash);
   } catch (e) {
     if (e.message.includes("OwnableUnauthorizedAccount")) {
@@ -94,14 +100,14 @@ window.mintNFT = async () => {
   }
 };
 
+// ── Verificar se endereço tem NFT ───────────────────────────────
 window.checkNFT = async () => {
   try {
-    // DEPOIS
     const raw = document.getElementById("mintAddress").value.trim() || userAddress;
     if (!ethers.isAddress(raw)) return log("❌ Endereço inválido.");
-    const addr = ethers.getAddress(raw); // força checksum, sem ENS lookup
+    const addr   = toChecksumAddress(raw); // evita ENS lookup
     const temNFT = await nftContract.hasNFT(addr);
-    log(`Endereço ${addr}\n${temNFT ? "✅ Tem NFT de membro" : "❌ Não tem NFT de membro"}`);
+    log(`Endereço: ${addr}\n${temNFT ? "✅ Tem NFT de membro" : "❌ Não tem NFT de membro"}`);
   } catch (e) { log("Erro: " + e.message); }
 };
 
@@ -194,10 +200,10 @@ window.voteProposal = async () => {
     await tx.wait();
     log("✅ Voto registrado! Tx: " + tx.hash);
   } catch (e) {
-    if (e.message.includes("Not member"))       log("❌ Você precisa ter o NFT de membro para votar.");
-    else if (e.message.includes("Already voted")) log("❌ Você já votou nesta proposta.");
-    else if (e.message.includes("Ended"))         log("❌ O prazo de votação desta proposta encerrou.");
-    else if (e.message.includes("Not approved"))  log("❌ Esta proposta ainda não foi aprovada pelo owner.");
+    if (e.message.includes("Not member"))            log("❌ Você precisa ter o NFT de membro para votar.");
+    else if (e.message.includes("Already voted"))    log("❌ Você já votou nesta proposta.");
+    else if (e.message.includes("Ended"))            log("❌ O prazo de votação desta proposta encerrou.");
+    else if (e.message.includes("Not approved"))     log("❌ Esta proposta ainda não foi aprovada pelo owner.");
     else if (e.message.includes("Proposer cannot vote")) log("❌ Quem criou a proposta não pode votar nela.");
     else log("Erro ao votar: " + e.message);
   }
