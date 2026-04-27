@@ -51,11 +51,40 @@ const log = (msg) => { status.innerText = msg; console.log(msg); };
 const toChecksumAddress = (addr) => ethers.getAddress(addr);
 
 // ── Conectar carteira ───────────────────────────────────────────
-window.connectWallet = async () => {
-  if (!window.ethereum) return log("❌ MetaMask não encontrada. Instale a extensão.");
+   
+    window.connectWallet = async () => {
+  if (!window.ethereum) return log("❌ MetaMask não encontrada.");
   try {
+    log("Passo 1: conectando provider...");
     provider = new ethers.BrowserProvider(window.ethereum);
-    signer   = await provider.getSigner();
+    
+    log("Passo 2: obtendo signer...");
+    signer = await provider.getSigner();
+    
+    log("Passo 3: obtendo endereço...");
+    const rawAddress = await signer.getAddress();
+    userAddress = ethers.getAddress(rawAddress);
+    document.getElementById("wallet-info").innerText = `Carteira: ${userAddress}`;
+    log("Passo 3 OK: " + userAddress);
+
+    log("Passo 4: criando contratos...");
+    tokenContract   = new ethers.Contract(TOKEN_ADDRESS,   TOKEN_ABI,   signer);
+    stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, signer);
+    nftContract     = new ethers.Contract(NFT_ADDRESS,     NFT_ABI,     signer);
+    daoContract     = new ethers.Contract(DAO_ADDRESS,     DAO_ABI,     signer);
+    log("Passo 4 OK");
+
+    log("Passo 5: chamando hasNFT...");
+    const temNFT = await nftContract.hasNFT(userAddress);
+    log("Passo 5 OK: temNFT = " + temNFT);
+
+    const total = await nftContract.totalMembers();
+    document.getElementById("nft-status").innerText =
+      `Sua carteira ${temNFT ? "✅ tem NFT de membro" : "❌ não tem NFT"} | Total de membros: ${total}`;
+
+    log("✅ Carteira conectada: " + userAddress);
+  } catch (e) { log("ERRO: " + e.message); }
+};
 
     // getAddress() retorna em checksum — força explicitamente para garantir
     const rawAddress = await signer.getAddress();
