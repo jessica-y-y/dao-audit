@@ -74,10 +74,10 @@ window.connectWallet = async () => {
 // O owner chama mint passando o endereço do destinatário
 window.mintNFT = async () => {
   try {
-    const recipient = document.getElementById("mintAddress").value.trim();
-    if (!ethers.isAddress(recipient)) return log("❌ Endereço inválido. Use um endereço Ethereum válido.");
-
-    log(`Mintando NFT para ${recipient}... (só funciona se sua carteira for o owner do contrato)`);
+       
+    const raw = document.getElementById("mintAddress").value.trim();
+    if (!ethers.isAddress(raw)) return log("❌ Endereço inválido. Use um endereço Ethereum válido (0x...).");
+    const recipient = ethers.getAddress(raw); // converte para checksum, evita ENS lookup
     const tx = await nftContract.mint(recipient);
     await tx.wait();
 
@@ -96,12 +96,14 @@ window.mintNFT = async () => {
 
 window.checkNFT = async () => {
   try {
-    const addr = document.getElementById("mintAddress").value.trim() || userAddress;
-    if (!ethers.isAddress(addr)) return log("❌ Endereço inválido.");
+    // DEPOIS
+    const raw = document.getElementById("mintAddress").value.trim() || userAddress;
+    if (!ethers.isAddress(raw)) return log("❌ Endereço inválido.");
+    const addr = ethers.getAddress(raw); // força checksum, sem ENS lookup
     const temNFT = await nftContract.hasNFT(addr);
     log(`Endereço ${addr}\n${temNFT ? "✅ Tem NFT de membro" : "❌ Não tem NFT de membro"}`);
   } catch (e) { log("Erro: " + e.message); }
-};
+};´
 
 // ── Staking ──────────────────────────────────────────────────────
 window.approveAndStake = async () => {
