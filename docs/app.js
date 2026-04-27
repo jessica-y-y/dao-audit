@@ -14,8 +14,7 @@ const TOKEN_ABI = [
 const NFT_ABI = [
   "function mint(address to) external",
   "function hasNFT(address user) view returns (bool)",
-  "function totalMembers() view returns (uint256)",
-  "function tokenIdCounter() view returns (uint256)"
+  "function totalMembers() view returns (uint256)"
 ];
 
 const STAKING_ABI = [
@@ -39,43 +38,36 @@ let tokenContract, stakingContract, nftContract, daoContract;
 
 const status = document.getElementById("status");
 const log = (msg) => { status.innerText = msg; console.log(msg); };
-const toChecksumAddress = (addr) => ethers.getAddress(addr);
+const toAddr = (addr) => ethers.getAddress(addr);
 
 window.connectWallet = async function() {
   if (!window.ethereum) { log("MetaMask nao encontrada."); return; }
   try {
-    log("Passo 1: conectando provider...");
+    log("Passo 1: conectando...");
     provider = new ethers.BrowserProvider(window.ethereum);
-    log("Passo 2: obtendo signer...");
     signer = await provider.getSigner();
-    log("Passo 3: obtendo endereco...");
-    userAddress = toChecksumAddress(await signer.getAddress());
+    userAddress = toAddr(await signer.getAddress());
     document.getElementById("wallet-info").innerText = "Carteira: " + userAddress;
-    log("Passo 3 OK: " + userAddress);
-    log("Passo 4: criando contratos...");
+    log("Passo 2: criando contratos...");
     tokenContract   = new ethers.Contract(TOKEN_ADDRESS,   TOKEN_ABI,   signer);
     stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, signer);
     nftContract     = new ethers.Contract(NFT_ADDRESS,     NFT_ABI,     signer);
     daoContract     = new ethers.Contract(DAO_ADDRESS,     DAO_ABI,     signer);
-    log("Passo 4 OK");
-    log("Passo 5: chamando hasNFT...");
+    log("Passo 3: verificando NFT...");
     const temNFT = await nftContract.hasNFT(userAddress);
-    log("Passo 5 OK: temNFT = " + temNFT);
-    const total = await nftContract.totalMembers();
+    const total  = await nftContract.totalMembers();
     document.getElementById("nft-status").innerText =
-      "Sua carteira " + (temNFT ? "tem NFT" : "nao tem NFT") + " | Total de membros: " + total;
+      "Sua carteira " + (temNFT ? "TEM NFT" : "NAO tem NFT") + " | Membros: " + total;
     log("Carteira conectada: " + userAddress);
-  } catch(e) {
-    log("ERRO: " + e.message);
-  }
+  } catch(e) { log("ERRO connectWallet: " + e.message); }
 };
 
 window.mintNFT = async function() {
   try {
     var raw = document.getElementById("mintAddress").value.trim();
     if (!ethers.isAddress(raw)) { log("Endereco invalido."); return; }
-    var recipient = toChecksumAddress(raw);
-    log("Mintando NFT para " + recipient + "...");
+    var recipient = toAddr(raw);
+    log("Mintando para " + recipient + "...");
     var tx = await nftContract.mint(recipient);
     await tx.wait();
     var total = await nftContract.totalMembers();
@@ -94,12 +86,10 @@ window.checkNFT = async function() {
   try {
     var raw = document.getElementById("mintAddress").value.trim() || userAddress;
     if (!ethers.isAddress(raw)) { log("Endereco invalido."); return; }
-    var addr = toChecksumAddress(raw);
+    var addr = toAddr(raw);
     var temNFT = await nftContract.hasNFT(addr);
-    log("Endereco: " + addr + "\n" + (temNFT ? "Tem NFT de membro" : "Nao tem NFT de membro"));
-  } catch(e) {
-    log("Erro: " + e.message);
-  }
+    log("Endereco: " + addr + "\n" + (temNFT ? "TEM NFT" : "NAO tem NFT"));
+  } catch(e) { log("Erro checkNFT: " + e.message); }
 };
 
 window.approveAndStake = async function() {
@@ -115,9 +105,7 @@ window.approveAndStake = async function() {
     var stakeTx = await stakingContract.stake(amount);
     await stakeTx.wait();
     log("Stake realizado! Tx: " + stakeTx.hash);
-  } catch(e) {
-    log("Erro no stake: " + e.message);
-  }
+  } catch(e) { log("Erro no stake: " + e.message); }
 };
 
 window.unstake = async function() {
@@ -130,9 +118,7 @@ window.unstake = async function() {
     var tx = await stakingContract.unstake(amount);
     await tx.wait();
     log("Unstake realizado! Tx: " + tx.hash);
-  } catch(e) {
-    log("Erro no unstake: " + e.message);
-  }
+  } catch(e) { log("Erro no unstake: " + e.message); }
 };
 
 window.claimReward = async function() {
@@ -141,9 +127,7 @@ window.claimReward = async function() {
     var tx = await stakingContract.claimReward();
     await tx.wait();
     log("Recompensa resgatada! Tx: " + tx.hash);
-  } catch(e) {
-    log("Erro no claim: " + e.message);
-  }
+  } catch(e) { log("Erro no claim: " + e.message); }
 };
 
 window.getStaked = async function() {
@@ -157,26 +141,22 @@ window.getStaked = async function() {
     var mult = (Number(multiplier) / 1e18).toFixed(2);
     log(
       "Stake atual: " + ethers.formatUnits(stakedAmt, decimals) + " DSP\n" +
-      "Recompensa acumulada: " + ethers.formatUnits(rewardAmt, decimals) + " DSP\n" +
-      "ETH/USD (Chainlink): $" + ethPrice + "\n" +
-      "Multiplicador ativo: " + mult + "x"
+      "Recompensa: " + ethers.formatUnits(rewardAmt, decimals) + " DSP\n" +
+      "ETH/USD: $" + ethPrice + "\n" +
+      "Multiplicador: " + mult + "x"
     );
-  } catch(e) {
-    log("Erro ao consultar stake: " + e.message);
-  }
+  } catch(e) { log("Erro getStaked: " + e.message); }
 };
 
 window.createProposal = async function() {
   try {
     var desc = document.getElementById("proposalDesc").value;
     if (!desc || desc.length <= 5) { log("Descricao deve ter mais de 5 caracteres."); return; }
-    log("Criando proposta na DAO...");
+    log("Criando proposta...");
     var tx = await daoContract.createProposal(desc);
     await tx.wait();
     log("Proposta criada! Tx: " + tx.hash);
-  } catch(e) {
-    log("Erro ao criar proposta: " + e.message);
-  }
+  } catch(e) { log("Erro ao criar proposta: " + e.message); }
 };
 
 window.voteProposal = async function() {
@@ -187,9 +167,7 @@ window.voteProposal = async function() {
     var tx = await daoContract.vote(Number(id));
     await tx.wait();
     log("Voto registrado! Tx: " + tx.hash);
-  } catch(e) {
-    log("Erro ao votar: " + e.message);
-  }
+  } catch(e) { log("Erro ao votar: " + e.message); }
 };
 
 window.getProposal = async function() {
@@ -203,15 +181,11 @@ window.getProposal = async function() {
     log(
       "Proposta #" + id + "\n" +
       "Descricao: " + p.description + "\n" +
-      "Votos a favor: " + p.votesFor + "\n" +
+      "Votos: " + p.votesFor + "\n" +
       "Prazo: " + deadline + "\n" +
-      "Aprovada pelo owner: " + (p.approvedByOwner ? "Sim" : "Nao") + "\n" +
+      "Aprovada owner: " + (p.approvedByOwner ? "Sim" : "Nao") + "\n" +
       "Executada: " + (p.executed ? "Sim" : "Nao") + "\n" +
-      "Status: " + (aberta ? "Votacao aberta" : "Votacao encerrada/pendente")
+      "Status: " + (aberta ? "Votacao aberta" : "Encerrada/pendente")
     );
-  } catch(e) {
-    log("Erro ao consultar proposta: " + e.message);
-  }
-};git add docs/app.js
-git commit -m "fix: reescreve app.js sem template literals para corrigir sintaxe"
-git push origin main
+  } catch(e) { log("Erro ao consultar proposta: " + e.message); }
+};
