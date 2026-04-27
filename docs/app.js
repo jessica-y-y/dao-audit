@@ -103,7 +103,7 @@ window.checkNFT = async () => {
     const temNFT = await nftContract.hasNFT(addr);
     log(`Endereço ${addr}\n${temNFT ? "✅ Tem NFT de membro" : "❌ Não tem NFT de membro"}`);
   } catch (e) { log("Erro: " + e.message); }
-};´
+};
 
 // ── Staking ──────────────────────────────────────────────────────
 window.approveAndStake = async () => {
