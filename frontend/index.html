@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DAOsubp Protocol – Sepolia</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; max-width: 740px; margin: 40px auto; padding: 0 20px; background: #0f172a; color: #e2e8f0; }
+    h1   { color: #38bdf8; margin-bottom: 4px; }
+    h2   { color: #7dd3fc; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 12px; }
+    button {
+      background: #0ea5e9; color: white; border: none;
+      padding: 9px 16px; border-radius: 6px; cursor: pointer; margin: 4px 3px;
+      font-size: 0.9em;
+    }
+    button:hover { background: #0284c7; }
+    button.secondary { background: #334155; }
+    button.secondary:hover { background: #475569; }
+    input {
+      padding: 8px 10px; border-radius: 6px; border: 1px solid #475569;
+      background: #1e293b; color: white; width: 100%; max-width: 320px;
+      margin: 4px 0; font-size: 0.9em;
+    }
+    .section { background: #1e293b; border-radius: 8px; padding: 16px 20px; margin: 14px 0; }
+    .note    { font-size: 0.8em; color: #64748b; margin: 6px 0 0; }
+    .warn    { font-size: 0.8em; color: #f59e0b; margin: 6px 0 0; }
+    #wallet-info  { color: #94a3b8; font-size: 0.85em; margin: 4px 0 12px; }
+    #nft-status   { color: #34d399; font-size: 0.85em; margin-top: 8px; }
+    #status {
+      background: #1e293b; border-radius: 8px; padding: 14px 16px;
+      margin-top: 16px; font-size: 0.88em; color: #94a3b8;
+      min-height: 70px; white-space: pre-line; border-left: 3px solid #0ea5e9;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏛️ DAOsubp Protocol</h1>
+  <p id="wallet-info">Carteira: não conectada</p>
+  <button onclick="connectWallet()">🔗 Conectar MetaMask</button>
+
+  <!-- NFT -->
+  <div class="section">
+    <h2>🎨 NFT de Membership (DSPM)</h2>
+    <p id="nft-status"></p>
+
+    <input type="text" id="mintAddress" placeholder="Endereço Ethereum (0x...)" />
+    <br/>
+    <button onclick="mintNFT()">🪙 Mint NFT para este endereço</button>
+    <button class="secondary" onclick="checkNFT()">🔍 Verificar se tem NFT</button>
+
+    <p class="warn">⚠️ Mint é restrito ao owner do contrato. Se sua carteira não for o owner, a transação será rejeitada.</p>
+    <p class="note">Ter o NFT é obrigatório para votar na DAO.</p>
+  </div>
+
+  <!-- Staking -->
+  <div class="section">
+    <h2>💰 Staking de Tokens (DSP)</h2>
+
+    <input type="number" id="stakeAmount" placeholder="Quantidade (ex: 10)" min="0" />
+    <br/>
+    <button onclick="approveAndStake()">✅ Aprovar e Fazer Stake</button>
+    <button onclick="unstake()">🔓 Unstake</button>
+    <button onclick="claimReward()">🎁 Claim Reward</button>
+    <button class="secondary" onclick="getStaked()">🔍 Ver meu Stake</button>
+
+    <p class="note">O multiplicador de recompensa varia automaticamente com o preço ETH/USD via Chainlink (entre 0.5x e 2x).</p>
+  </div>
+
+  <!-- Governança -->
+  <div class="section">
+    <h2>🗳️ Governança (DAO)</h2>
+
+    <p><strong>Criar Proposta</strong></p>
+    <input type="text" id="proposalDesc" placeholder="Descrição da proposta (mín. 6 caracteres)" />
+    <br/>
+    <button onclick="createProposal()">📝 Criar Proposta</button>
+    <p class="note">Precisa ter tokens DSP. O owner deve aprovar a proposta antes da votação começar.</p>
+
+    <p style="margin-top:14px"><strong>Consultar / Votar em Proposta</strong></p>
+    <input type="number" id="proposalId" placeholder="ID da proposta (ex: 0)" min="0" />
+    <br/>
+    <button onclick="voteProposal()">👍 Votar a Favor</button>
+    <button class="secondary" onclick="getProposal()">🔍 Ver Proposta</button>
+    <p class="note">Precisa ter NFT. 1 voto por membro. Quem criou a proposta não pode votar nela.</p>
+  </div>
+
+  <!-- Log de status -->
+  <div id="status">Conecte sua carteira MetaMask para começar...</div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
