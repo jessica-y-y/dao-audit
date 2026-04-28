@@ -1,9 +1,9 @@
 import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.7.1/dist/ethers.min.js";
 
-const TOKEN_ADDRESS   = "0xd9145CCE52D386f254917e481eB44e9943F39138";
-const STAKING_ADDRESS = "0x694AA1769357215DE4FAC081bf1f309aDC325306";
-const NFT_ADDRESS     = "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8";
-const DAO_ADDRESS     = "0xd9145CCE52D386f254917e481eB44e9943F39138";
+const TOKEN_ADDRESS   = "0x77d7e53a42e029d8e9441a55e5789ff9371a437c";
+const STAKING_ADDRESS = "0x44611e32cd882308da390351eb0ef7d67c52683d";
+const NFT_ADDRESS     = "0xce5798df4a7d3b8f6ff3db7375f9a862e1c53de9";
+const DAO_ADDRESS     = "0x8989d6c096209cc47f939acba8cc551e057d3e48";
 
 const TOKEN_ABI = [
   "function approve(address spender, uint256 value) returns (bool)",
